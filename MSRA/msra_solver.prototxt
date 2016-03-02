@@ -1,0 +1,14 @@
+net: "MSRA/msra.prototxt"
+test_iter: 10
+test_interval: 100
+base_lr: 1e-6
+display: 5
+max_iter: 1000000
+lr_policy: "step"
+gamma: 1
+momentum: 0.9
+weight_decay: 0.0005
+stepsize: 5000
+snapshot: 10000
+snapshot_prefix: "MSRA/msra"
+solver_mode: GPU
