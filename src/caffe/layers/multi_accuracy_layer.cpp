@@ -14,7 +14,7 @@ namespace caffe {
 template <typename Dtype>
 void MultiAccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  const string& source = "/home/mayfive/data/MSRA/Imgs/train.100";
+  const string& source = this->layer_param_.multi_accuracy_param().source_folder();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
   string filename;
@@ -24,8 +24,8 @@ void MultiAccuracyLayer<Dtype>::LayerSetUp(
   }
   infile.close();
   lines_id_ = 0;
-  LOG(INFO) << "Opening file madongyu madongyu madongyu " << source;
-  LOG(INFO) << "mynamelist size is  " << lines_.size();
+  LOG(INFO) << "Opening file " << source << source;
+  LOG(INFO) << "test source size is  " << lines_.size();
 
 }
 
@@ -53,7 +53,7 @@ void MultiAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   top[0]->mutable_cpu_data()[0] = count*1.0/c;
 
   {
-  //  return;
+    return;
     int batch_num = c/4096;
 //    LOG(INFO) << "batch num for test is " << batch_num;
 //    int bigNumber = 0;

@@ -395,6 +395,8 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional MultiDataParameter multi_data_param = 150;
+  optional MultiAccuracyParameter multi_accuracy_param = 151;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1242,9 +1244,7 @@ message V1LayerParameter {
   optional WindowDataParameter window_data_param = 20;
   optional TransformationParameter transform_param = 36;
   optional LossParameter loss_param = 42;
-  optional V0LayerParameter layer = 1;
-  optional MultiDataParameter multi_data_param = 150;
- 
+  optional V0LayerParameter layer = 1; 
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters
@@ -1380,4 +1380,8 @@ message MultiDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+}
+
+message MultiAccuracyParameter {
+  optional string source_folder = 1 [default = ""];
 }

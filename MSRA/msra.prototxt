@@ -3,12 +3,12 @@ layer {
   type: "MultiData"
   top: "data"
   top: "label"
-  image_data_param {
-    source: "/home/mayfive/data/MSRA/Imgs/train.1000"
+  multi_data_param {
+    source: "../data/MSRA/Imgs/train.1000"
     batch_size: 50
     new_height: 256
     new_width: 256
-    root_folder:"/home/mayfive/data/MSRA/Imgs/"
+    root_folder:"../data/MSRA/Imgs/"
   }
   include {
     phase: TRAIN
@@ -19,12 +19,12 @@ layer {
   type: "MultiData"
   top: "data"
   top: "label"
-  image_data_param {
-    source: "/home/mayfive/data/MSRA/Imgs/test.100"
+  multi_data_param {
+    source: "../data/MSRA/Imgs/test.100"
     batch_size: 10
     new_height: 256
     new_width: 256
-    root_folder:"/home/mayfive/data/MSRA/Imgs/"
+    root_folder:"../data/MSRA/Imgs/"
   }
   include {
     phase: TEST
