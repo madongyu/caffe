@@ -1384,4 +1384,6 @@ message MultiDataParameter {
 
 message MultiAccuracyParameter {
   optional string source_folder = 1 [default = ""];
+  optional string result_folder = 2 [default = ""];
+  optional bool generate_result_image = 3 [default = false];
 }

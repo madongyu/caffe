@@ -14,6 +14,9 @@ namespace caffe {
 template <typename Dtype>
 void MultiAccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  if (!this->layer_param_.multi_accuracy_param().generate_result_image()) {
+    return;
+  }
   const string& source = this->layer_param_.multi_accuracy_param().source_folder();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
@@ -53,7 +56,9 @@ void MultiAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   top[0]->mutable_cpu_data()[0] = count*1.0/c;
 
   {
-    return;
+    if (!this->layer_param_.multi_accuracy_param().generate_result_image()) {
+      return;
+    }
     int batch_num = c/4096;
 //    LOG(INFO) << "batch num for test is " << batch_num;
 //    int bigNumber = 0;
@@ -81,6 +86,7 @@ void MultiAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 //    LOG(INFO) << " vs : " << bigNumber*1.0/4096 << " : " << plusNumber*1.0/4096;
 
 
+    string fix = this->layer_param_.multi_accuracy_param().result_folder();
 
     for ( int k = 0; k < batch_num; ++k ) {
       {
@@ -93,7 +99,6 @@ void MultiAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           (*it)[1] = bottom_data[k*4096+i] >0.5 ? 255 :0;
           (*it)[2] = bottom_data[k*4096+i] >0.5 ? 255 :0;
         }
-        string fix = "/home/mayfive/data/MSRA/test/";
         string name = fix  + lines_[lines_id_].first;
         cv::imwrite( name.c_str(), newImg );
       }
@@ -107,7 +112,6 @@ void MultiAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           (*it)[1] = bottom_label[k*4096+i] >0 ? 255 :0;
           (*it)[2] = bottom_label[k*4096+i] >0 ? 255 :0;
         }
-        string fix = "/home/mayfive/data/MSRA/test/";
         string name = fix  + lines_[lines_id_].second;
         cv::imwrite( name.c_str(), newImg );
       }
