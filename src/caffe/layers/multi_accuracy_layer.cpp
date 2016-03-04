@@ -2,6 +2,7 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 #include "caffe/layers/multi_accuracy_layer.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -48,9 +49,9 @@ void MultiAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int c = bottom[0]->count();
   int count = 0;
   for ( int i = 0; i < c; i++ ) {
-    if ( bottom_data[i] > 0.5  &&  bottom_label[i] ==  1 )
+    if ( bottom_data[i] > 0.5  &&  std::fabs(bottom_label[i]-1) < 1e-5 )
       count++;
-    else if (bottom_data[i] <= 0.5 &&  bottom_label[i] == 0 )
+    else if (bottom_data[i] <= 0.5 && std::fabs(bottom_label[i]-0) < 1e-5)
       count++;
   }
   top[0]->mutable_cpu_data()[0] = count*1.0/c;
