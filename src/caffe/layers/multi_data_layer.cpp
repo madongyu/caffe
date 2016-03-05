@@ -151,14 +151,14 @@ void MultiDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
 
     cv::Mat cv_label = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
-            64, 64, is_color);
+            64, 64, false);
     CHECK(cv_label.data) << "Could not load " << lines_[lines_id_].second;
 
-    cv::Mat_<cv::Vec3b>::iterator it= cv_label.begin<cv::Vec3b>();
-    cv::Mat_<cv::Vec3b>::iterator itend= cv_label.end<cv::Vec3b>();
+    cv::Mat_<uchar>::iterator it= cv_label.begin<uchar>();
+    cv::Mat_<uchar>::iterator itend= cv_label.end<uchar>();
     int i = 0;
     for (; it!= itend; ++it, ++i) {
-      prefetch_label[4096*item_id+i] = (*it)[0] > 0 ? 1:0;
+      prefetch_label[4096*item_id+i] = (*it) >= 128 ? 1:0;
     }
     CHECK_EQ(i,4096) << "label image dimension miss match";
 
