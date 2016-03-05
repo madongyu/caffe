@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cmath>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/base_data_layer.hpp"
@@ -69,7 +70,35 @@ void MultiDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                     new_height, new_width, is_color);
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
+
+
+  std::vector<cv::Mat> channels(3);
+  split(cv_img, channels);
+
+  cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+  cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+  cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+
+  for (int h = 0; h < biasImg.rows; ++h) {
+    for (int w = 0; w < biasImg.cols; ++w) {
+      if ( bias_it == bias_itend ) {
+        CHECK_EQ(1,2) << "Img out of dimension";
+      }
+      float center_bias = (h - 127.5) * (h - 127.5)
+                           + (w - 127.5) * (w - 127.5);
+      float tmp = 255 * std::exp(-center_bias / 10000);
+      (*bias_it) = static_cast<char>(tmp);
+      bias_it++;
+    }
+  }
+  channels.push_back(biasImg);
+  cv::Mat fourImg;
+  cv::merge(channels, fourImg);
+
+
+
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(fourImg);
+
   this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data and top[0] according to the batch_size.
   const int batch_size = this->layer_param_.multi_data_param().batch_size();
@@ -124,7 +153,33 @@ void MultiDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       new_height, new_width, is_color);
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_img.
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
+
+  std::vector<cv::Mat> channels(3);
+  split(cv_img, channels);
+
+  cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+  cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+  cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+
+  for (int h = 0; h < biasImg.rows; ++h) {
+    for (int w = 0; w < biasImg.cols; ++w) {
+      if ( bias_it == bias_itend ) {
+        CHECK_EQ(1,2) << "Img out of dimension";
+      }
+      float center_bias = (h - 127.5) * (h - 127.5)
+                           + (w - 127.5) * (w - 127.5);
+      float tmp = 255 * std::exp(-center_bias / 10000);
+      (*bias_it) = static_cast<char>(tmp);
+      bias_it++;
+    }
+  }
+  channels.push_back(biasImg);
+  cv::Mat fourImg;
+  cv::merge(channels, fourImg);
+
+
+
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(fourImg);
   this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
@@ -144,10 +199,34 @@ void MultiDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
+
+    std::vector<cv::Mat> channels(3);
+    split(cv_img, channels);
+
+    cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+    cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+    cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+
+    for (int h = 0; h < biasImg.rows; ++h) {
+      for (int w = 0; w < biasImg.cols; ++w) {
+        if ( bias_it == bias_itend ) {
+          CHECK_EQ(1,2) << "Img out of dimension";
+        }
+        float center_bias = (h - 127.5) * (h - 127.5)
+                        + (w - 127.5) * (w - 127.5);
+        float tmp = 255 * std::exp(-center_bias / 10000);
+        (*bias_it) = static_cast<char>(tmp);
+        bias_it++;
+      }
+    }
+    channels.push_back(biasImg);
+    cv::Mat fourImg;
+    cv::merge(channels, fourImg);
+
     // Apply transformations (mirror, crop...) to the image
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
-    this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+    this->data_transformer_->Transform(fourImg, &(this->transformed_data_));
 
 
     cv::Mat cv_label = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
