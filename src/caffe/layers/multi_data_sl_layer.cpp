@@ -263,18 +263,18 @@ void MultiDataSlLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     cv::Mat cv_img;
     cv::resize(sub_img, cv_img, cv::Size(new_width, new_height));
 
-    {
-      string sb;
-      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
-        if ( lines_[lines_id_].labelName[j] != '.' ) {
-          sb = sb + lines_[lines_id_].labelName[j];
-        } else {
-          break;
-        }
-      }
-      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_origin.jpg";
-      cv::imwrite( name.c_str(), cv_img );
-    }
+//    {
+//      string sb;
+//      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
+//        if ( lines_[lines_id_].labelName[j] != '.' ) {
+//          sb = sb + lines_[lines_id_].labelName[j];
+//        } else {
+//          break;
+//        }
+//      }
+//      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_origin.jpg";
+//      cv::imwrite( name.c_str(), cv_img );
+//    }
 
 
     std::vector<cv::Mat> channels(3);
@@ -315,19 +315,19 @@ void MultiDataSlLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     cv::Mat cv_label;
     cv::resize(sub_label, cv_label, cv::Size(64, 64));
 
-    {
-      string sb;
-      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
-        if ( lines_[lines_id_].labelName[j] != '.' ) {
-          sb = sb + lines_[lines_id_].labelName[j];
-        } else {
-          break;
-        }
-      }
-      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_label.png";
-      cv::imwrite( name.c_str(), cv_label );
-
-    }
+//    {
+//      string sb;
+//      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
+//        if ( lines_[lines_id_].labelName[j] != '.' ) {
+//          sb = sb + lines_[lines_id_].labelName[j];
+//        } else {
+//          break;
+//        }
+//      }
+//      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_label.jpg";
+//      cv::imwrite( name.c_str(), cv_label );
+//
+//    }
 
     cv::Mat_<uchar>::iterator it= cv_label.begin<uchar>();
     cv::Mat_<uchar>::iterator itend= cv_label.end<uchar>();

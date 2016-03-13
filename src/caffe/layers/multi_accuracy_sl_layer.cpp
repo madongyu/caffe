@@ -126,9 +126,9 @@ void MultiAccuracySlLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
         cv::Mat_<cv::Vec3b>::iterator itend= newImg.end<cv::Vec3b>();
         int i = 0;
         for (; it!= itend; ++it, ++i) {
-          (*it)[0] = bottom_label[k*4096+i] >0 ? 255 :0;
-          (*it)[1] = bottom_label[k*4096+i] >0 ? 255 :0;
-          (*it)[2] = bottom_label[k*4096+i] >0 ? 255 :0;
+          (*it)[0] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+          (*it)[1] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+          (*it)[2] = bottom_data[k*4096+i] >0.5 ? 255 :0;
         }
         string id;
         for ( int bike = 0; bike < lines_[lines_id_].labelName.size(); bike++ ) {
