@@ -47,6 +47,7 @@ void MultiDataSlLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int new_height = this->layer_param_.multi_data_param().new_height();
   const int new_width  = this->layer_param_.multi_data_param().new_width();
   string root_folder = this->layer_param_.multi_data_param().root_folder();
+  bool center_flag = this->layer_param_.multi_data_param().center_flag();
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
@@ -104,32 +105,39 @@ void MultiDataSlLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   cv::Mat cv_img;
   cv::resize(sub_img, cv_img, cv::Size(new_width, new_height));
 
-  // Use data_transformer to infer the expected blob shape from a cv_image.
+  vector<int> top_shape;
+  if (center_flag) {
 
-  std::vector<cv::Mat> channels(3);
-  split(cv_img, channels);
+    // Use data_transformer to infer the expected blob shape from a cv_image.
 
-  cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
-  cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
-  cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+    std::vector<cv::Mat> channels(3);
+    split(cv_img, channels);
 
-  for (int h = 0; h < biasImg.rows; ++h) {
-    for (int w = 0; w < biasImg.cols; ++w) {
-      if ( bias_it == bias_itend ) {
-        CHECK_EQ(1,2) << "Img out of dimension";
+    cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+    cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+    cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+
+    for (int h = 0; h < biasImg.rows; ++h) {
+      for (int w = 0; w < biasImg.cols; ++w) {
+        if ( bias_it == bias_itend ) {
+          CHECK_EQ(1,2) << "Img out of dimension";
+        }
+        float center_bias = (h - 127.5) * (h - 127.5)
+                                           + (w - 127.5) * (w - 127.5);
+        float tmp = 255 * std::exp(-center_bias / 10000);
+        (*bias_it) = static_cast<char>(tmp);
+        bias_it++;
       }
-      float center_bias = (h - 127.5) * (h - 127.5)
-                               + (w - 127.5) * (w - 127.5);
-      float tmp = 255 * std::exp(-center_bias / 10000);
-      (*bias_it) = static_cast<char>(tmp);
-      bias_it++;
     }
-  }
-  channels.push_back(biasImg);
-  cv::Mat fourImg;
-  cv::merge(channels, fourImg);
+    channels.push_back(biasImg);
+    cv::Mat fourImg;
+    cv::merge(channels, fourImg);
+    top_shape = this->data_transformer_->InferBlobShape(fourImg);
 
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(fourImg);
+  } else {
+    top_shape = this->data_transformer_->InferBlobShape(cv_img);
+
+  }
 
   this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data and top[0] according to the batch_size.
@@ -177,6 +185,7 @@ void MultiDataSlLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_height = multi_data_param.new_height();
   const int new_width = multi_data_param.new_width();
   string root_folder = multi_data_param.root_folder();
+  bool center_flag = multi_data_param.center_flag();
 
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -200,34 +209,39 @@ void MultiDataSlLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   cv::Mat cv_img;
   cv::resize(sub_img, cv_img, cv::Size(new_width, new_height));
 
+  vector<int> top_shape;
 
+  if (center_flag) {
+    std::vector<cv::Mat> channels(3);
+    split(cv_img, channels);
 
-  std::vector<cv::Mat> channels(3);
-  split(cv_img, channels);
+    cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+    cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+    cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
 
-  cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
-  cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
-  cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
-
-  for (int h = 0; h < biasImg.rows; ++h) {
-    for (int w = 0; w < biasImg.cols; ++w) {
-      if ( bias_it == bias_itend ) {
-        CHECK_EQ(1,2) << "Img out of dimension";
+    for (int h = 0; h < biasImg.rows; ++h) {
+      for (int w = 0; w < biasImg.cols; ++w) {
+        if ( bias_it == bias_itend ) {
+          CHECK_EQ(1,2) << "Img out of dimension";
+        }
+        float center_bias = (h - 127.5) * (h - 127.5)
+                                           + (w - 127.5) * (w - 127.5);
+        float tmp = 255 * std::exp(-center_bias / 10000);
+        (*bias_it) = static_cast<char>(tmp);
+        bias_it++;
       }
-      float center_bias = (h - 127.5) * (h - 127.5)
-                               + (w - 127.5) * (w - 127.5);
-      float tmp = 255 * std::exp(-center_bias / 10000);
-      (*bias_it) = static_cast<char>(tmp);
-      bias_it++;
     }
+    channels.push_back(biasImg);
+    cv::Mat fourImg;
+    cv::merge(channels, fourImg);
+    top_shape = this->data_transformer_->InferBlobShape(fourImg);
+
+
+  } else {
+    top_shape = this->data_transformer_->InferBlobShape(cv_img);
+
   }
-  channels.push_back(biasImg);
-  cv::Mat fourImg;
-  cv::merge(channels, fourImg);
 
-
-
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(fourImg);
   this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
@@ -263,48 +277,55 @@ void MultiDataSlLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     cv::Mat cv_img;
     cv::resize(sub_img, cv_img, cv::Size(new_width, new_height));
 
-//    {
-//      string sb;
-//      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
-//        if ( lines_[lines_id_].labelName[j] != '.' ) {
-//          sb = sb + lines_[lines_id_].labelName[j];
-//        } else {
-//          break;
-//        }
-//      }
-//      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_origin.jpg";
-//      cv::imwrite( name.c_str(), cv_img );
-//    }
-
-
-    std::vector<cv::Mat> channels(3);
-    split(cv_img, channels);
-
-    cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
-    cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
-    cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
-
-    for (int h = 0; h < biasImg.rows; ++h) {
-      for (int w = 0; w < biasImg.cols; ++w) {
-        if ( bias_it == bias_itend ) {
-          CHECK_EQ(1,2) << "Img out of dimension";
-        }
-        float center_bias = (h - 127.5) * (h - 127.5)
-                            + (w - 127.5) * (w - 127.5);
-        float tmp = 255 * std::exp(-center_bias / 10000);
-        (*bias_it) = static_cast<char>(tmp);
-        bias_it++;
-      }
-    }
-    channels.push_back(biasImg);
-    cv::Mat fourImg;
-    cv::merge(channels, fourImg);
+    //    {
+    //      string sb;
+    //      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
+    //        if ( lines_[lines_id_].labelName[j] != '.' ) {
+    //          sb = sb + lines_[lines_id_].labelName[j];
+    //        } else {
+    //          break;
+    //        }
+    //      }
+    //      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_origin.jpg";
+    //      cv::imwrite( name.c_str(), cv_img );
+    //    }
 
     // Apply transformations (mirror, crop...) to the image
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
-    this->data_transformer_->Transform(fourImg, &(this->transformed_data_));
 
+
+    if (center_flag) {
+
+
+
+      std::vector<cv::Mat> channels(3);
+      split(cv_img, channels);
+
+      cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+      cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+      cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+
+      for (int h = 0; h < biasImg.rows; ++h) {
+        for (int w = 0; w < biasImg.cols; ++w) {
+          if ( bias_it == bias_itend ) {
+            CHECK_EQ(1,2) << "Img out of dimension";
+          }
+          float center_bias = (h - 127.5) * (h - 127.5)
+                                        + (w - 127.5) * (w - 127.5);
+          float tmp = 255 * std::exp(-center_bias / 10000);
+          (*bias_it) = static_cast<char>(tmp);
+          bias_it++;
+        }
+      }
+      channels.push_back(biasImg);
+      cv::Mat fourImg;
+      cv::merge(channels, fourImg);
+
+      this->data_transformer_->Transform(fourImg, &(this->transformed_data_));
+    } else {
+      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+    }
 
     cv::Mat cv_label_origin = ReadImageToCVMat(root_folder + lines_[lines_id_].labelName,
         0, 0, false);
@@ -315,19 +336,19 @@ void MultiDataSlLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     cv::Mat cv_label;
     cv::resize(sub_label, cv_label, cv::Size(64, 64));
 
-//    {
-//      string sb;
-//      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
-//        if ( lines_[lines_id_].labelName[j] != '.' ) {
-//          sb = sb + lines_[lines_id_].labelName[j];
-//        } else {
-//          break;
-//        }
-//      }
-//      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_label.jpg";
-//      cv::imwrite( name.c_str(), cv_label );
-//
-//    }
+    //    {
+    //      string sb;
+    //      for (int j=0; j < lines_[lines_id_].labelName.size(); j++ ) {
+    //        if ( lines_[lines_id_].labelName[j] != '.' ) {
+    //          sb = sb + lines_[lines_id_].labelName[j];
+    //        } else {
+    //          break;
+    //        }
+    //      }
+    //      string name = "/home/mayfive/data/MSRA/subset/" + sb + axis2str(x1,y1,x2,y2)+ "_label.jpg";
+    //      cv::imwrite( name.c_str(), cv_label );
+    //
+    //    }
 
     cv::Mat_<uchar>::iterator it= cv_label.begin<uchar>();
     cv::Mat_<uchar>::iterator itend= cv_label.end<uchar>();
