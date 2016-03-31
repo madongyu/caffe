@@ -1381,6 +1381,7 @@ message MultiDataParameter {
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
   optional bool center_flag = 13 [default = false];
+  optional string mask_folder = 14 [default = ""];
 }
 
 message MultiAccuracyParameter {
