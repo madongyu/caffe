@@ -27,7 +27,7 @@ MultiDataLayer<Dtype>::~MultiDataLayer<Dtype>() {
 
 template <typename Dtype>
 void MultiDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top) {
   const int new_height = this->layer_param_.multi_data_param().new_height();
   const int new_width  = this->layer_param_.multi_data_param().new_width();
   const bool is_color  = this->layer_param_.multi_data_param().is_color();
@@ -37,7 +37,7 @@ void MultiDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
-      "new_height and new_width to be set at the same time.";
+          "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.multi_data_param().source();
   LOG(INFO) << "Opening file " << source;
@@ -69,7 +69,7 @@ void MultiDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read an image, and use it to initialize the top blob.
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-                                    new_height, new_width, is_color);
+      new_height, new_width, is_color);
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
 
@@ -91,7 +91,7 @@ void MultiDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
           CHECK_EQ(1,2) << "Img out of dimension";
         }
         float center_bias = (h - 127.5) * (h - 127.5)
-                               + (w - 127.5) * (w - 127.5);
+                                       + (w - 127.5) * (w - 127.5);
         float tmp = 255 * std::exp(-center_bias / 10000);
         (*bias_it) = static_cast<char>(tmp);
         bias_it++;
@@ -169,32 +169,32 @@ void MultiDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   vector<int> top_shape;
 
   if (center_flag) {
-  std::vector<cv::Mat> channels(3);
-  split(cv_img, channels);
+    std::vector<cv::Mat> channels(3);
+    split(cv_img, channels);
 
-  cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
-  cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
-  cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+    cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+    cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+    cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
 
-  for (int h = 0; h < biasImg.rows; ++h) {
-    for (int w = 0; w < biasImg.cols; ++w) {
-      if ( bias_it == bias_itend ) {
-        CHECK_EQ(1,2) << "Img out of dimension";
+    for (int h = 0; h < biasImg.rows; ++h) {
+      for (int w = 0; w < biasImg.cols; ++w) {
+        if ( bias_it == bias_itend ) {
+          CHECK_EQ(1,2) << "Img out of dimension";
+        }
+        float center_bias = (h - 127.5) * (h - 127.5)
+                                   + (w - 127.5) * (w - 127.5);
+        float tmp = 255 * std::exp(-center_bias / 10000);
+        (*bias_it) = static_cast<char>(tmp);
+        bias_it++;
       }
-      float center_bias = (h - 127.5) * (h - 127.5)
-                           + (w - 127.5) * (w - 127.5);
-      float tmp = 255 * std::exp(-center_bias / 10000);
-      (*bias_it) = static_cast<char>(tmp);
-      bias_it++;
     }
-  }
-  channels.push_back(biasImg);
-  cv::Mat fourImg;
-  cv::merge(channels, fourImg);
+    channels.push_back(biasImg);
+    cv::Mat fourImg;
+    cv::merge(channels, fourImg);
 
 
 
-  top_shape = this->data_transformer_->InferBlobShape(fourImg);
+    top_shape = this->data_transformer_->InferBlobShape(fourImg);
   } else {
     top_shape = this->data_transformer_->InferBlobShape(cv_img);
 
@@ -224,42 +224,42 @@ void MultiDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
 
     // Apply transformations (mirror, crop...) to the image
-     int offset = batch->data_.offset(item_id);
-     this->transformed_data_.set_cpu_data(prefetch_data + offset);
+    int offset = batch->data_.offset(item_id);
+    this->transformed_data_.set_cpu_data(prefetch_data + offset);
 
-     if (center_flag) {
-       std::vector<cv::Mat> channels(3);
-           split(cv_img, channels);
+    if (center_flag) {
+      std::vector<cv::Mat> channels(3);
+      split(cv_img, channels);
 
-           cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
-           cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
-           cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
+      cv::Mat biasImg = cv::Mat(256,256,CV_8UC1);
+      cv::Mat_<char>::iterator bias_it= biasImg.begin<char>();
+      cv::Mat_<char>::iterator bias_itend= biasImg.end<char>();
 
-           for (int h = 0; h < biasImg.rows; ++h) {
-             for (int w = 0; w < biasImg.cols; ++w) {
-               if ( bias_it == bias_itend ) {
-                 CHECK_EQ(1,2) << "Img out of dimension";
-               }
-               float center_bias = (h - 127.5) * (h - 127.5)
-                               + (w - 127.5) * (w - 127.5);
-               float tmp = 255 * std::exp(-center_bias / 10000);
-               (*bias_it) = static_cast<char>(tmp);
-               bias_it++;
-             }
-           }
-           channels.push_back(biasImg);
-           cv::Mat fourImg;
-           cv::merge(channels, fourImg);
-           this->data_transformer_->Transform(fourImg, &(this->transformed_data_));
-     } else {
-       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
-     }
+      for (int h = 0; h < biasImg.rows; ++h) {
+        for (int w = 0; w < biasImg.cols; ++w) {
+          if ( bias_it == bias_itend ) {
+            CHECK_EQ(1,2) << "Img out of dimension";
+          }
+          float center_bias = (h - 127.5) * (h - 127.5)
+                                       + (w - 127.5) * (w - 127.5);
+          float tmp = 255 * std::exp(-center_bias / 10000);
+          (*bias_it) = static_cast<char>(tmp);
+          bias_it++;
+        }
+      }
+      channels.push_back(biasImg);
+      cv::Mat fourImg;
+      cv::merge(channels, fourImg);
+      this->data_transformer_->Transform(fourImg, &(this->transformed_data_));
+    } else {
+      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+    }
 
 
 
 
     cv::Mat cv_label = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
-            64, 64, false);
+        64, 64, false);
     CHECK(cv_label.data) << "Could not load " << lines_[lines_id_].second;
 
     cv::Mat_<uchar>::iterator it= cv_label.begin<uchar>();
@@ -283,61 +283,61 @@ void MultiDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
   }
   batch_timer.Stop();
-//  LOG(INFO) << "Test input output";
-//  int testIndex = 13;
-//
-//  cv::Mat cv_label = ReadImageToCVMat(root_folder + lines_[testIndex].second,
-//      64, 64, is_color);
-//  CHECK(cv_label.data) << "Could not load " << lines_[10].second;
-//
-//  cv::Mat_<cv::Vec3b>::iterator it= cv_label.begin<cv::Vec3b>();
-//  cv::Mat_<cv::Vec3b>::iterator itend= cv_label.end<cv::Vec3b>();
-//  int i = 0;
-//
-//  double *testLabel = new double[4096];
-//
-//  for (; it!= itend; ++it, ++i) {
-//    testLabel[i] = (*it)[testIndex] > 0 ? 1:0;
-//  }
-//
-//  {
-//    cv::Mat newImg = cv::Mat(64,64,CV_8UC3);
-//    cv::Mat_<cv::Vec3b>::iterator it= newImg.begin<cv::Vec3b>();
-//    cv::Mat_<cv::Vec3b>::iterator itend= newImg.end<cv::Vec3b>();
-//
-//    int i = 0;
-//    for (; it!= itend; ++it, ++i) {
-//      (*it)[0] = prefetch_label[testIndex*4096+i] > 0 ? 255 :0;
-//      (*it)[1] = prefetch_label[testIndex*4096+i] > 0 ? 255 :0;
-//      (*it)[2] = prefetch_label[testIndex*4096+i] > 0 ? 255 :0;
-//    }
-//    string fix = "/home/mayfive/";
-//    string name = fix + "test"  + lines_[testIndex].second;
-//    cv::imwrite( name.c_str(), newImg );
-//    LOG(INFO) << "Test write out madongyu success";
-//
-//    cv::Mat orignImg = cv::Mat(256,256,CV_8UC3);
-//    //prefetch_data
-//    {
-//      cv::Mat_<cv::Vec3b>::iterator it= orignImg.begin<cv::Vec3b>();
-//      cv::Mat_<cv::Vec3b>::iterator itend= orignImg.end<cv::Vec3b>();
-//
-//      int i = 0;
-//
-//      for ( int h = 0; h < 256; h++ ) {
-//        for ( int w = 0; w < 256; w++ ) {
-//          for ( int c = 0; c < 3; c++ ) {
-//            (*it)[c] = prefetch_data[testIndex*3*256*256+(c * 256 + h) * 256 + w];
-//          }
-//          ++it;
-//        }
-//      }
-//      string fix = "/home/mayfive/";
-//      string name = fix +"test" + lines_[testIndex].first;
-//      cv::imwrite( name.c_str(), orignImg );
-//    }
-//  }
-//  CHECK_EQ(1,2) << "exit from madongyu";
+  //  LOG(INFO) << "Test input output";
+  //  int testIndex = 13;
+  //
+  //  cv::Mat cv_label = ReadImageToCVMat(root_folder + lines_[testIndex].second,
+  //      64, 64, is_color);
+  //  CHECK(cv_label.data) << "Could not load " << lines_[10].second;
+  //
+  //  cv::Mat_<cv::Vec3b>::iterator it= cv_label.begin<cv::Vec3b>();
+  //  cv::Mat_<cv::Vec3b>::iterator itend= cv_label.end<cv::Vec3b>();
+  //  int i = 0;
+  //
+  //  double *testLabel = new double[4096];
+  //
+  //  for (; it!= itend; ++it, ++i) {
+  //    testLabel[i] = (*it)[testIndex] > 0 ? 1:0;
+  //  }
+  //
+  //  {
+  //    cv::Mat newImg = cv::Mat(64,64,CV_8UC3);
+  //    cv::Mat_<cv::Vec3b>::iterator it= newImg.begin<cv::Vec3b>();
+  //    cv::Mat_<cv::Vec3b>::iterator itend= newImg.end<cv::Vec3b>();
+  //
+  //    int i = 0;
+  //    for (; it!= itend; ++it, ++i) {
+  //      (*it)[0] = prefetch_label[testIndex*4096+i] > 0 ? 255 :0;
+  //      (*it)[1] = prefetch_label[testIndex*4096+i] > 0 ? 255 :0;
+  //      (*it)[2] = prefetch_label[testIndex*4096+i] > 0 ? 255 :0;
+  //    }
+  //    string fix = "/home/mayfive/";
+  //    string name = fix + "test"  + lines_[testIndex].second;
+  //    cv::imwrite( name.c_str(), newImg );
+  //    LOG(INFO) << "Test write out madongyu success";
+  //
+  //    cv::Mat orignImg = cv::Mat(256,256,CV_8UC3);
+  //    //prefetch_data
+  //    {
+  //      cv::Mat_<cv::Vec3b>::iterator it= orignImg.begin<cv::Vec3b>();
+  //      cv::Mat_<cv::Vec3b>::iterator itend= orignImg.end<cv::Vec3b>();
+  //
+  //      int i = 0;
+  //
+  //      for ( int h = 0; h < 256; h++ ) {
+  //        for ( int w = 0; w < 256; w++ ) {
+  //          for ( int c = 0; c < 3; c++ ) {
+  //            (*it)[c] = prefetch_data[testIndex*3*256*256+(c * 256 + h) * 256 + w];
+  //          }
+  //          ++it;
+  //        }
+  //      }
+  //      string fix = "/home/mayfive/";
+  //      string name = fix +"test" + lines_[testIndex].first;
+  //      cv::imwrite( name.c_str(), orignImg );
+  //    }
+  //  }
+  //  CHECK_EQ(1,2) << "exit from madongyu";
 
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";

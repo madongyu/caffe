@@ -30,7 +30,7 @@ namespace caffe {
 
 template <typename Dtype>
 void MultiAccuracySlLayer<Dtype>::LayerSetUp(
-  const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   if (!this->layer_param_.multi_accuracy_param().generate_result_image()) {
     return;
   }
@@ -52,9 +52,9 @@ void MultiAccuracySlLayer<Dtype>::LayerSetUp(
 
 template <typename Dtype>
 void MultiAccuracySlLayer<Dtype>::Reshape(
-  const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-   vector<int> top_shape(0);
-   top[0]->Reshape(top_shape);
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  vector<int> top_shape(0);
+  top[0]->Reshape(top_shape);
 
 }
 
@@ -78,57 +78,66 @@ void MultiAccuracySlLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
       return;
     }
     int batch_num = c/4096;
-//    LOG(INFO) << "batch num for test is " << batch_num;
-//    int bigNumber = 0;
-//    int plusNumber = 0;
-//    for ( int i = 0; i < 64; i++ ) {
-//      for ( int j = 0; j < 64; j++ ) {
-//        std::cout << bottom_data[i*64+j] << " ";
-//        if ( j % 8 == 0 ) {
-//          std::cout << std::endl;
-//        }
-//        if (bottom_data[i*64+j] > -1) {
-//          bigNumber++;
-//        }
-//        if (bottom_data[i*64+j] > 1 || bottom_data[i*64+j] < 0) {
-//          CHECK_EQ(1,2) << "there is not need for sigmod";
-//        }
-//
-//        if (bottom_label[i*64+j] > 0) {
-//          plusNumber++;
-//        }
-//      }
-//    }
-//    std::cout << std::endl;
-//    LOG(INFO) << "bigNumber is " << bigNumber <<  "plusNumber is " << plusNumber;
-//    LOG(INFO) << " vs : " << bigNumber*1.0/4096 << " : " << plusNumber*1.0/4096;
+    //    LOG(INFO) << "batch num for test is " << batch_num;
+    //    int bigNumber = 0;
+    //    int plusNumber = 0;
+    //    for ( int i = 0; i < 64; i++ ) {
+    //      for ( int j = 0; j < 64; j++ ) {
+    //        std::cout << bottom_data[i*64+j] << " ";
+    //        if ( j % 8 == 0 ) {
+    //          std::cout << std::endl;
+    //        }
+    //        if (bottom_data[i*64+j] > -1) {
+    //          bigNumber++;
+    //        }
+    //        if (bottom_data[i*64+j] > 1 || bottom_data[i*64+j] < 0) {
+    //          CHECK_EQ(1,2) << "there is not need for sigmod";
+    //        }
+    //
+    //        if (bottom_label[i*64+j] > 0) {
+    //          plusNumber++;
+    //        }
+    //      }
+    //    }
+    //    std::cout << std::endl;
+    //    LOG(INFO) << "bigNumber is " << bigNumber <<  "plusNumber is " << plusNumber;
+    //    LOG(INFO) << " vs : " << bigNumber*1.0/4096 << " : " << plusNumber*1.0/4096;
 
 
     string fix = this->layer_param_.multi_accuracy_param().result_folder();
 
     for ( int k = 0; k < batch_num; ++k ) {
-//      {
-//        cv::Mat newImg = cv::Mat(64,64,CV_8UC3);
-//        cv::Mat_<cv::Vec3b>::iterator it= newImg.begin<cv::Vec3b>();
-//        cv::Mat_<cv::Vec3b>::iterator itend= newImg.end<cv::Vec3b>();
-//        int i = 0;
-//        for (; it!= itend; ++it, ++i) {
-//          (*it)[0] = bottom_data[k*4096+i] >0.5 ? 255 :0;
-//          (*it)[1] = bottom_data[k*4096+i] >0.5 ? 255 :0;
-//          (*it)[2] = bottom_data[k*4096+i] >0.5 ? 255 :0;
-//        }
-//        string name = fix  + lines_[lines_id_].dataName;
-//        cv::imwrite( name.c_str(), newImg );
-//      }
+      //      {
+      //        cv::Mat newImg = cv::Mat(64,64,CV_8UC3);
+      //        cv::Mat_<cv::Vec3b>::iterator it= newImg.begin<cv::Vec3b>();
+      //        cv::Mat_<cv::Vec3b>::iterator itend= newImg.end<cv::Vec3b>();
+      //        int i = 0;
+      //        for (; it!= itend; ++it, ++i) {
+      //          (*it)[0] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+      //          (*it)[1] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+      //          (*it)[2] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+      //        }
+      //        string name = fix  + lines_[lines_id_].dataName;
+      //        cv::imwrite( name.c_str(), newImg );
+      //      }
       {
         cv::Mat newImg = cv::Mat(64,64,CV_8UC3);
         cv::Mat_<cv::Vec3b>::iterator it= newImg.begin<cv::Vec3b>();
         cv::Mat_<cv::Vec3b>::iterator itend= newImg.end<cv::Vec3b>();
         int i = 0;
-        for (; it!= itend; ++it, ++i) {
-          (*it)[0] = bottom_data[k*4096+i] >0.5 ? 255 :0;
-          (*it)[1] = bottom_data[k*4096+i] >0.5 ? 255 :0;
-          (*it)[2] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+        if (!this->layer_param_.multi_accuracy_param().generate_score_image()) {
+          for (; it!= itend; ++it, ++i) {
+            (*it)[0] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+            (*it)[1] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+            (*it)[2] = bottom_data[k*4096+i] >0.5 ? 255 :0;
+          }
+        } else {
+          // generate the score image
+          for (; it!= itend; ++it, ++i) {
+            (*it)[0] = bottom_data[k*4096+i] * 255;
+            (*it)[1] = bottom_data[k*4096+i] * 255;
+            (*it)[2] = bottom_data[k*4096+i] * 255;
+          }
         }
         string id;
         for ( int bike = 0; bike < lines_[lines_id_].labelName.size(); bike++ ) {
@@ -150,7 +159,7 @@ void MultiAccuracySlLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
       }
     }
   }
- }
+}
 
 INSTANTIATE_CLASS(MultiAccuracySlLayer);
 REGISTER_LAYER_CLASS(MultiAccuracySl);

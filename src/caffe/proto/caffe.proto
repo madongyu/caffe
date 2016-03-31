@@ -1387,4 +1387,5 @@ message MultiAccuracyParameter {
   optional string source_folder = 1 [default = ""];
   optional string result_folder = 2 [default = ""];
   optional bool generate_result_image = 3 [default = false];
+  optional bool generate_score_image = 4 [default = false];
 }
