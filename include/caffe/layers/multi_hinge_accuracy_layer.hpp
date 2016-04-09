@@ -54,6 +54,8 @@ class MultiHingeAccuracyLayer : public Layer<Dtype> {
       if (propagate_down[i]) { NOT_IMPLEMENTED; }
     }
   }
+  vector<std::pair<std::string, std::string> > lines_;
+  int lines_id_;
 };
 
 }  // namespace caffe
