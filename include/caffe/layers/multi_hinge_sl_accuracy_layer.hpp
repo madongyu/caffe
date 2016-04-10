@@ -1,5 +1,5 @@
-#ifndef CAFFE_MULTI_HINGE_ACCURACY_LAYER_HPP_
-#define CAFFE_MULTI_HINGE_ACCURACY_LAYER_HPP_
+#ifndef CAFFE_MULTI_SL_HINGE_ACCURACY_LAYER_HPP_
+#define CAFFE_MULTI_SL_HINGE_ACCURACY_LAYER_HPP_
 
 #include <vector>
 
@@ -16,7 +16,7 @@ namespace caffe {
  *        classification task.
  */
 template <typename Dtype>
-class MultiHingeAccuracyLayer : public Layer<Dtype> {
+class MultiHingeSlAccuracyLayer : public Layer<Dtype> {
  public:
   /**
    * @param param provides AccuracyParameter accuracy_param,
@@ -26,14 +26,14 @@ class MultiHingeAccuracyLayer : public Layer<Dtype> {
    *     correct.  For example, if @f$ k = 5 @f$, a prediction is counted
    *     correct if the correct label is among the top 5 predicted labels.
    */
-  explicit MultiHingeAccuracyLayer(const LayerParameter& param)
+  explicit MultiHingeSlAccuracyLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "MultiHingeAccuracy"; }
+  virtual inline const char* type() const { return "MultiHingeSlAccuracy"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
 
   // If there are two top blobs, then the second blob will contain
@@ -54,7 +54,16 @@ class MultiHingeAccuracyLayer : public Layer<Dtype> {
       if (propagate_down[i]) { NOT_IMPLEMENTED; }
     }
   }
-  vector<std::pair<std::string, std::string> > lines_;
+  class SelectiveData {
+    public :
+    std::string dataName;
+    std::string labelName;
+    int x1,y1,x2,y2;
+    SelectiveData(std::string jpg,std::string png, int x1_,int y1_,int x2_,int y2_):
+      dataName(jpg),labelName(png),x1(x1_),y1(y1_),x2(x2_),y2(y2_){
+    }
+  };
+  vector<SelectiveData> lines_;
   int lines_id_;
 };
 
